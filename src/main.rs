@@ -1,3 +1,4 @@
+#![windows_subsystem = "windows"]
 use eframe::egui;
 use egui::{ScrollArea, scroll_area::ScrollBarVisibility};
 use std::io::{Read, Write};
@@ -50,6 +51,7 @@ fn main() -> eframe::Result {
     let mut screen: u8 = 0;
     let options = eframe::NativeOptions::default();
     eframe::run_ui_native("AuroraChat Windows", options, move |ctx, _frame| {
+        ctx.set_visuals(egui::Visuals::dark());
         egui::CentralPanel::default().show(ctx, |ui| {
             if screen == 0 {
                 ui.heading("login/signup");
