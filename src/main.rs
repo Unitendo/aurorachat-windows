@@ -24,9 +24,6 @@ fn main() -> eframe::Result {
 
     // hello
     stream.read(&mut buffer).expect("Failed to read. Not sure why this happens. Not critical.");
-
-    // login, join, history
-    let _ = stream.write_all(b"login|goober|skibidi|\njoin|general|\nhistory|\n");
     
     // spawn thread for reading
     let mut stream_clone = stream.try_clone().expect("Failed to clone stream.");
@@ -46,40 +43,59 @@ fn main() -> eframe::Result {
         }
     });
     
+    let mut username: String = String::new();
+    let mut password: String = String::new();
     let mut message: String = String::new();
     let mut channel: String = "general".to_string();
+    let mut screen: u8 = 0;
     let options = eframe::NativeOptions::default();
     eframe::run_ui_native("AuroraChat Windows", options, move |ctx, _frame| {
         egui::CentralPanel::default().show(ctx, |ui| {
-            ui.horizontal(|ui| {
-                ui.heading("#");
-                let textedit = ui.add(egui::TextEdit::singleline(&mut channel).desired_width(256.0));
-                if textedit.lost_focus() && ui.input(|i| i.key_pressed(egui::Key::Enter)) && channel != "" {
-                    // change channel
-                    let _ = stream.write_all(b"part|\n");
-                    *messages.lock().unwrap() = String::new();
-                    let _ = stream.write_all(&format!("join|{}|\nhistory|", channel).into_bytes());
-                }
-            });
-            ScrollArea::vertical()
-                .auto_shrink(false)
-                .scroll_bar_visibility(ScrollBarVisibility::default())
-                .show(ui, |ui| {
-                    ui.with_layout(
-                        egui::Layout::top_down(egui::Align::LEFT).with_cross_justify(true),
-                        |ui| {
-                            ui.colored_label(egui::Color32::WHITE, format!("{}", messages.lock().unwrap()));
-                        },
-                    );
+            if screen == 0 {
+                ui.heading("login/signup");
+                ui.add(egui::TextEdit::singleline(&mut username).desired_width(256.0).hint_text("Username"));
+                ui.add(egui::TextEdit::singleline(&mut password).desired_width(256.0).hint_text("Password").password(true));
+                ui.horizontal(|ui| {
+                    if ui.button("Log In").clicked() {
+                        let _ = stream.write_all(&format!("login|{}|{}|\njoin|general|\nhistory|\n", username, password).into_bytes());
+                        screen = 1
+                    }
+                    if ui.button("Sign Up").clicked() {
+                        let _ = stream.write_all(&format!("register|{}|{}|\njoin|general|\nhistory|\n", username, password).into_bytes());
+                        screen = 1
+                    }
                 });
-            ui.with_layout(egui::Layout::bottom_up(egui::Align::Center), |ui| {
-                let textedit = ui.add(egui::TextEdit::singleline(&mut message).desired_width(f32::INFINITY));
-                if textedit.lost_focus() && ui.input(|i| i.key_pressed(egui::Key::Enter)) && message != "" {
-                    // send message
-                    let _ = stream.write_all(&format!("msg|{}", message).into_bytes());
-                    message = "".to_string();
-                }
-            });
+            } else if screen == 1 {
+                ui.horizontal(|ui| {
+                    ui.heading("#");
+                    let textedit = ui.add(egui::TextEdit::singleline(&mut channel).desired_width(256.0));
+                    if textedit.lost_focus() && ui.input(|i| i.key_pressed(egui::Key::Enter)) && channel != "" {
+                        // change channel
+                        let _ = stream.write_all(b"part|\n");
+                        *messages.lock().unwrap() = String::new();
+                        let _ = stream.write_all(&format!("join|{}|\nhistory|", channel).into_bytes());
+                    }
+                });
+                ScrollArea::vertical()
+                    .auto_shrink(false)
+                    .scroll_bar_visibility(ScrollBarVisibility::default())
+                    .show(ui, |ui| {
+                        ui.with_layout(
+                            egui::Layout::top_down(egui::Align::LEFT).with_cross_justify(true),
+                            |ui| {
+                                ui.colored_label(egui::Color32::WHITE, format!("{}", messages.lock().unwrap()));
+                            },
+                        );
+                    });
+                ui.with_layout(egui::Layout::bottom_up(egui::Align::Center), |ui| {
+                    let textedit = ui.add(egui::TextEdit::singleline(&mut message).desired_width(f32::INFINITY));
+                    if textedit.lost_focus() && ui.input(|i| i.key_pressed(egui::Key::Enter)) && message != "" {
+                        // send message
+                        let _ = stream.write_all(&format!("msg|{}", message).into_bytes());
+                        message = "".to_string();
+                    }
+                });
+            }
         });
     })
 }
