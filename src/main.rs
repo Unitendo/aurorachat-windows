@@ -47,10 +47,20 @@ fn main() -> eframe::Result {
     });
     
     let mut message: String = String::new();
+    let mut channel: String = "general".to_string();
     let options = eframe::NativeOptions::default();
     eframe::run_ui_native("AuroraChat Windows", options, move |ctx, _frame| {
         egui::CentralPanel::default().show(ctx, |ui| {
-            ui.heading("#general");
+            ui.horizontal(|ui| {
+                ui.heading("#");
+                let textedit = ui.add(egui::TextEdit::singleline(&mut channel).desired_width(256.0));
+                if textedit.lost_focus() && ui.input(|i| i.key_pressed(egui::Key::Enter)) && channel != "" {
+                    // change channel
+                    let _ = stream.write_all(b"part|\n");
+                    *messages.lock().unwrap() = String::new();
+                    let _ = stream.write_all(&format!("join|{}|\nhistory|", channel).into_bytes());
+                }
+            });
             ScrollArea::vertical()
                 .auto_shrink(false)
                 .scroll_bar_visibility(ScrollBarVisibility::default())
@@ -65,7 +75,6 @@ fn main() -> eframe::Result {
             ui.with_layout(egui::Layout::bottom_up(egui::Align::Center), |ui| {
                 let textedit = ui.add(egui::TextEdit::singleline(&mut message).desired_width(f32::INFINITY));
                 if textedit.lost_focus() && ui.input(|i| i.key_pressed(egui::Key::Enter)) && message != "" {
-                    println!("pressed enter");
                     // send message
                     let _ = stream.write_all(&format!("msg|{}", message).into_bytes());
                     message = "".to_string();
