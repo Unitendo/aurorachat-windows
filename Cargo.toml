@@ -1,0 +1,8 @@
+[package]
+name = "aurorachat-windows"
+version = "0.7.0"
+edition = "2024"
+
+[dependencies]
+eframe = "0.36.1"
+egui = "0.36.1"
