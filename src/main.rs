@@ -4,6 +4,7 @@ use egui::{ScrollArea, scroll_area::ScrollBarVisibility};
 use std::io::{Read, Write};
 use std::net::TcpStream;
 use std::thread;
+use std::env;
 
 fn on_data(data: &[u8], messages: &str) -> String {
     let msg = String::from_utf8_lossy(data);
@@ -18,9 +19,17 @@ fn on_data(data: &[u8], messages: &str) -> String {
 }
 
 fn main() -> eframe::Result {
-    println!("Welcome to AuroraChat Windows");
+    let args: Vec<String> = env::args().collect();
     let mut stream = TcpStream::connect("104.236.25.60:7070").expect("Failed to connect...");
+    if args.len() > 1 {
+        println!("Connecting to {}", args[1]);
+        stream = TcpStream::connect(&args[1]).expect("Failed to connect...");
+    } else {
+        println!("No custom address provided, using: 104.236.25.60:7070");
+    }
+
     println!("Connected!");
+    println!("Welcome to AuroraChat Windows!");
     let mut buffer = [0u8; 2048];
     let mut screen: u8 = 0;
 
@@ -110,6 +119,8 @@ fn main() -> eframe::Result {
             } else if screen == 2 {
                 ui.heading("error reading server data");
                 ui.label("the server may be down or unreachable.");
+                ui.label("you can connect to a custom server by including the server's ip as an argument in the command line:\n");
+                ui.code("aurorachat-windows.exe (server ip here):7070");
             }
         });
     })
