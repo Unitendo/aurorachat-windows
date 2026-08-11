@@ -22,10 +22,21 @@ fn main() -> eframe::Result {
     let mut stream = TcpStream::connect("104.236.25.60:7070").expect("Failed to connect...");
     println!("Connected!");
     let mut buffer = [0u8; 2048];
+    let mut screen: u8 = 0;
 
     // hello
-    stream.read(&mut buffer).expect("Failed to read. Not sure why this happens. Not critical.");
-    
+    match stream.read(&mut buffer) {
+        Ok(0) => {
+            println!("Server closed the connection.");
+            return Ok(());
+        }
+        Ok(_)=>{}
+        Err(_) => {
+            println!("Failed to read, Is the server down?");
+            screen = 2;
+        }
+    }
+
     // spawn thread for reading
     let mut stream_clone = stream.try_clone().expect("Failed to clone stream.");
     let messages = std::sync::Arc::new(std::sync::Mutex::new(String::new()));
@@ -48,7 +59,6 @@ fn main() -> eframe::Result {
     let mut password: String = String::new();
     let mut message: String = String::new();
     let mut channel: String = "general".to_string();
-    let mut screen: u8 = 0;
     let options = eframe::NativeOptions::default();
     eframe::run_ui_native("AuroraChat Windows", options, move |ctx, _frame| {
         ctx.set_visuals(egui::Visuals::dark());
@@ -97,6 +107,9 @@ fn main() -> eframe::Result {
                         message = "".to_string();
                     }
                 });
+            } else if screen == 2 {
+                ui.heading("error reading server data");
+                ui.label("the server may be down or unreachable.");
             }
         });
     })
