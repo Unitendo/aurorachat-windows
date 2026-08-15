@@ -1,0 +1,36 @@
+name: Build AuroraChat Windows
+
+on:
+  push:
+    branches: [ "**" ]
+    paths:
+      - 'Cargo.toml'
+      - 'source/**'
+      - '.github/workflows/build.yml'
+  pull_request:
+    branches: [ "**" ]
+    paths:
+      - 'Cargo.toml'
+      - 'source/**'
+      - '.github/workflows/build.yml'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+    container: rust:1.97.1
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Build Project
+        run: |
+          cargo build
+
+      - name: Upload windows build
+        uses: actions/upload-artifact@v7
+        with:
+          name: AuroraChat Windows Automatic Build (could be unfinished!)
+          path: ./aurorachat-windows.exe
+      
