@@ -25,12 +25,10 @@ jobs:
         uses: actions/checkout@v6
 
       - name: Add windows target
-        run: |
-          rustup target add x86_64-pc-windows-gnu
-
+        run: rustup target add x86_64-pc-windows-msvc
+      
       - name: Build Project
-        run: |
-          cargo build --target x86_64-pc-windows-gnu
+        run: cargo build --target x86_64-pc-windows-gnu
 
       - name: Upload windows build
         uses: actions/upload-artifact@v7
