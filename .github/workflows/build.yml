@@ -24,10 +24,9 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v6
 
-      - run: sudo apt-get update && sudo apt-get install -y gcc-mingw-w64-x86-64
+      - run: apt-get update && apt-get install -y gcc-mingw-w64-x86-64
       - run: rustup target add x86_64-pc-windows-gnu
-      - run: cargo build --target x86_64-pc-windows-gnu
-
+      - run: cargo build --target x86_64-pc-windows-gnu -vv 2>&1 | tee build.log | grep -B5 "link.exe" || true
       - name: Upload windows build
         uses: actions/upload-artifact@v7
         with:
