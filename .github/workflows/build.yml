@@ -17,19 +17,23 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-24.04
-    container: rust:1.97.1
+    runs-on: windows-latest
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
 
-      - run: apt-get update && apt-get install -y gcc-mingw-w64-x86-64
-      - run: rustup target add x86_64-pc-windows-gnu
-      - run: cargo build --target x86_64-pc-windows-gnu -vv 2>&1 | tee build.log | grep -B5 "link.exe" || true
+      - name: Install Rust with GNU toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          target: x86_64-pc-windows-gnu
+          default: true
+
+      - run: cargo build --target x86_64-pc-windows-gnu
+
       - name: Upload windows build
         uses: actions/upload-artifact@v7
         with:
           name: AuroraChat Windows Automatic Build (could be unfinished!)
-          path: ./aurorachat-windows.exe
-      
+          path: ./target/x86_64-pc-windows-gnu/debug/aurorachat-windows.exe
