@@ -28,7 +28,7 @@ jobs:
         run: rustup target add x86_64-pc-windows-msvc
       
       - name: Build Project
-        run: cargo build --target x86_64-pc-windows-gnu
+        run: cargo build --target x86_64-pc-windows-msvc
 
       - name: Upload windows build
         uses: actions/upload-artifact@v7
