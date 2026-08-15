@@ -24,11 +24,9 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v6
 
-      - name: Add windows target
-        run: rustup target add x86_64-pc-windows-msvc
-      
-      - name: Build Project
-        run: cargo build --target x86_64-pc-windows-msvc
+      - run: sudo apt-get update && sudo apt-get install -y gcc-mingw-w64-x86-64
+      - run: rustup target add x86_64-pc-windows-gnu
+      - run: cargo build --target x86_64-pc-windows-gnu
 
       - name: Upload windows build
         uses: actions/upload-artifact@v7
