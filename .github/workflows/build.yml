@@ -17,16 +17,20 @@ on:
 
 jobs:
   build:
-    runs-on: windows-latest
+    runs-on: ubuntu-24.04
     container: rust:1.97.1
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
 
+      - name: Add windows target
+        run: |
+          rustup target add x86_64-pc-windows-gnu
+
       - name: Build Project
         run: |
-          cargo build
+          cargo build --target x86_64-pc-windows-gnu
 
       - name: Upload windows build
         uses: actions/upload-artifact@v7
