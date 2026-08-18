@@ -10,7 +10,7 @@ fn on_data(data: &[u8], messages: &str) -> String {
     let msg = String::from_utf8_lossy(data);
     let mut returnstr: String = messages.to_owned();
     for line in msg.split("\n").collect::<Vec<_>>() {
-        if line.starts_with("msg") {
+        if line.starts_with("msg") && line.split("|").count() == 4 {
             let formatted_msg = format!("<{}>: {}", line.split('|').collect::<Vec<_>>()[1], line.split('|').collect::<Vec<_>>()[2]);
             returnstr = returnstr + "\n" + &formatted_msg;
         }
