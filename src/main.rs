@@ -11,11 +11,33 @@ fn on_data(data: &[u8], messages: &str) -> String {
     let mut returnstr: String = messages.to_owned();
     for line in msg.split("\n").collect::<Vec<_>>() {
         if line.starts_with("msg") && line.split("|").count() == 4 {
-            let formatted_msg = format!("<{}>: {}", line.split('|').collect::<Vec<_>>()[1], line.split('|').collect::<Vec<_>>()[2]);
+            let formatted_msg = format!("<{}>: {}", line.split('|').collect::<Vec<_>>()[1], urldecode(line.split('|').collect::<Vec<_>>()[2]));
             returnstr = returnstr + "\n" + &formatted_msg;
         }
     }
     return returnstr;
+}
+
+fn urldecode(s: &str) -> String {
+    let mut res = String::new();
+    let mut iter = s.chars();
+
+    while let Some(c) = iter.next() {
+        if c == '%' {
+            let left = iter.next();
+            let right = iter.next();
+            match (left, right) {
+                (Some(l), Some(r)) => {
+                    let byte = u8::from_str_radix(&format!("{}{}", l, r), 16).unwrap();
+                    res += &(byte as char).to_string();
+                }
+                _ => panic!(),
+            }
+        } else {
+            res += &c.to_string();
+        }
+    }
+    return res;
 }
 
 fn main() -> eframe::Result {
@@ -97,9 +119,12 @@ fn main() -> eframe::Result {
                         let _ = stream.write_all(&format!("join|{}|\nhistory|", channel).into_bytes());
                     }
                 });
+                let input_height = ui.spacing().interact_size.y + ui.spacing().item_spacing.y * 2.0;
                 ScrollArea::vertical()
                     .auto_shrink(false)
+                    .max_height(ui.available_height() - input_height)
                     .scroll_bar_visibility(ScrollBarVisibility::default())
+                    .stick_to_bottom(true)
                     .show(ui, |ui| {
                         ui.with_layout(
                             egui::Layout::top_down(egui::Align::LEFT).with_cross_justify(true),
@@ -108,14 +133,12 @@ fn main() -> eframe::Result {
                             },
                         );
                     });
-                ui.with_layout(egui::Layout::bottom_up(egui::Align::Center), |ui| {
-                    let textedit = ui.add(egui::TextEdit::singleline(&mut message).desired_width(f32::INFINITY));
-                    if textedit.lost_focus() && ui.input(|i| i.key_pressed(egui::Key::Enter)) && message != "" {
-                        // send message
-                        let _ = stream.write_all(&format!("msg|{}", message).into_bytes());
-                        message = "".to_string();
-                    }
-                });
+
+                let textedit = ui.add(egui::TextEdit::singleline(&mut message).desired_width(f32::INFINITY));
+                if textedit.lost_focus() && ui.input(|i| i.key_pressed(egui::Key::Enter)) && !message.is_empty() {
+                    let _ = stream.write_all(format!("msg|{}", message).as_bytes());
+                    message.clear();
+                }
             } else if screen == 2 {
                 ui.heading("error reading server data");
                 ui.label("the server may be down or unreachable.");
